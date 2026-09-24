@@ -55,6 +55,14 @@
   button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; min-height: 56px; }
   .back { font: inherit; font-size: 1.1rem; font-weight: 700; color: var(--ink); background: transparent; border: 3px solid var(--ink); border-radius: 12px; padding: 10px 16px; min-height: 56px; cursor: pointer; }
+  .name {
+    width: 100%; font: inherit; font-size: 1.6rem; font-weight: 700; color: var(--ink);
+    background: var(--tile); border: 3px solid var(--line); border-radius: 14px;
+    padding: 18px 20px; min-height: 80px;
+  }
+  .name:focus { outline: none; border-color: var(--accent); }
+  .or { color: var(--soft); margin: 22px 0 10px; font-size: 1.15rem; }
+  .err { color: var(--accent); font-weight: 700; margin: 12px 0 0; min-height: 1.4em; }
   .more { text-align: center; color: var(--soft); margin: 18px 0 0; font-size: 1.1rem; }
   @media (max-width: 480px) {
     body { font-size: 19px; }
@@ -76,6 +84,10 @@
 // Mettez votre numéro ici (ex : "0612345678") pour que le SMS vous arrive directement.
 const TELEPHONE = "0661973897";
 
+// Optionnel : mettez les prénoms ici pour qu'ils n'aient qu'à appuyer dessus.
+// Exemple : const PRENOMS = ["Papy", "Sophie", "Marc"];
+const PRENOMS = ["FERNANDO", "JACINTA", "FRANCK"];
+
 const STEPS = [
   { key: "entree", title: "Quelle entrée ?", label: "Entrée", items: [
     ["🦐","3 bouchées de crevettes"],["🥢","3 nems au porc"],["🥢","3 nems au poulet"],
@@ -92,20 +104,48 @@ const STEPS = [
     ["💧","Evian (eau plate)"],["🍑","Ice Tea"],["🍊","Orangina"],["🍋","Schweppes agrumes"],
     ["🍹","Tropico"],["🍓","Oasis"]]}
 ];
-let step = 0;
+let step = -1;
 const picks = {};
+let prenom = "";
 const app = document.getElementById("app");
+
+function esc(t) { return t.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
 
 function dots(n) {
   return '<div class="dots">' + STEPS.map((_, i) => `<span class="${i < n ? "done" : ""}"></span>`).join("") + "</div>";
 }
 
+function renderName() {
+  app.innerHTML = dots(0) +
+    `<h1>Bonjour ! Quel est votre prénom ?</h1>
+     <p class="help">${PRENOMS.length ? "Appuyez sur votre prénom." : "Écrivez votre prénom, puis appuyez sur Continuer."}</p>` +
+    (PRENOMS.length ? `<div class="options">` + PRENOMS.map(p =>
+      `<button class="opt pick" data-p="${p}"><span class="emo">🙂</span>${p}</button>`).join("") +
+      `</div><p class="or">Ou écrivez-le ici :</p>` : "") +
+    `<input class="name" id="name" type="text" autocomplete="given-name" autocapitalize="words" placeholder="Votre prénom" value="${esc(prenom)}">
+     <p class="err" id="err"></p>
+     <div class="nav"><button class="btn main" id="go">Continuer</button></div>`;
+  const next = () => { step = 0; render(); window.scrollTo(0, 0); };
+  app.querySelectorAll(".pick").forEach(b => b.onclick = () => {
+    prenom = b.dataset.p; b.classList.add("on"); setTimeout(next, 250);
+  });
+  const input = document.getElementById("name");
+  const go = () => {
+    const v = input.value.trim();
+    if (!v) { document.getElementById("err").textContent = "Écrivez votre prénom pour continuer."; input.focus(); return; }
+    prenom = v; next();
+  };
+  document.getElementById("go").onclick = go;
+  input.onkeydown = e => { if (e.key === "Enter") { input.blur(); go(); } };
+}
+
 function render() {
+  if (step < 0) return renderName();
   if (step >= STEPS.length) return renderRecap();
   const s = STEPS[step];
   app.innerHTML = dots(step) +
     `<div class="top"><p class="step">Question ${step + 1} sur ${STEPS.length}</p>` +
-    (step > 0 ? `<button class="back" id="back">← Retour</button>` : "") + `</div>
+    `<button class="back" id="back">← Retour</button></div>
      <h1>${s.title}</h1>
      <p class="help">Appuyez sur votre choix.${s.items.length > 5 ? " Faites glisser vers le haut pour voir tous les choix." : ""}</p>
      <div class="options">` +
@@ -118,13 +158,12 @@ function render() {
     b.classList.add("on");
     setTimeout(() => { step++; render(); window.scrollTo(0, 0); }, 250);
   });
-  const back = document.getElementById("back");
-  if (back) back.onclick = () => { step--; render(); window.scrollTo(0, 0); };
+  document.getElementById("back").onclick = () => { step--; render(); window.scrollTo(0, 0); };
 }
 
 function renderRecap() {
   app.innerHTML = dots(STEPS.length) +
-    `<h1>Voici votre menu</h1>
+    `<h1>Voici votre menu, ${esc(prenom)}</h1>
      <p class="help">C'est bon ? Appuyez sur le bouton rouge pour envoyer vos choix.</p>
      <ul class="recap">` +
     STEPS.map(s => { const [e, t] = s.items[picks[s.key]];
@@ -135,11 +174,11 @@ function renderRecap() {
        <button class="btn" id="back">← Changer</button>
        <button class="btn" id="again">Recommencer</button>
      </div>`;
-  const texte = "Mon menu royal :\n" + STEPS.map(s => s.label + " : " + s.items[picks[s.key]][1]).join("\n");
+  const texte = "Menu royal de " + prenom + " :\n" + STEPS.map(s => s.label + " : " + s.items[picks[s.key]][1]).join("\n");
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
   document.getElementById("send").href = "sms:" + TELEPHONE + (ios ? "&" : "?") + "body=" + encodeURIComponent(texte);
   document.getElementById("back").onclick = () => { step = STEPS.length - 1; render(); };
-  document.getElementById("again").onclick = () => { for (const k in picks) delete picks[k]; step = 0; render(); };
+  document.getElementById("again").onclick = () => { for (const k in picks) delete picks[k]; prenom = ""; step = -1; render(); };
 }
 render();
 </script>
