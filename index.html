@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Menu royal – Chez Huang</title>
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #fbf8f3; --ink: #1c1a17; --soft: #5b554c; --tile: #ffffff;
+    --line: #d9d1c4; --accent: #a8201a; --accent-ink: #ffffff; --chosen: #f6e3df;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1917; --ink: #f4efe7; --soft: #c9c0b3; --tile: #26231f;
+      --line: #4a443c; --accent: #e0574e; --accent-ink: #1b1917; --chosen: #3b2522;
+    }
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Verdana, Arial, sans-serif;
+    font-size: 22px; line-height: 1.4;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 20px 48px; }
+  .step { color: var(--soft); font-size: 1.1rem; margin: 0; }
+  h1 { font-size: 2.2rem; line-height: 1.15; margin: 0 0 8px; }
+  .help { color: var(--soft); margin: 0 0 24px; font-size: 1.15rem; }
+  .options { display: grid; gap: 14px; }
+  .opt {
+    display: flex; align-items: center; gap: 18px; width: 100%;
+    min-height: 84px; padding: 14px 20px; text-align: left;
+    font: inherit; font-size: 1.5rem; font-weight: 700; color: var(--ink);
+    background: var(--tile); border: 3px solid var(--line); border-radius: 14px; cursor: pointer;
+  }
+  .opt .emo { font-size: 2.1rem; width: 2.6rem; text-align: center; flex: none; }
+  .opt.on { border-color: var(--accent); background: var(--chosen); }
+  .nav { display: flex; gap: 14px; margin-top: 28px; flex-wrap: wrap; }
+  .btn {
+    font: inherit; font-size: 1.35rem; font-weight: 700; padding: 18px 26px;
+    border-radius: 14px; cursor: pointer; min-height: 70px;
+    border: 3px solid var(--ink); background: transparent; color: var(--ink);
+  }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; text-align: center; }
+  .btn.main { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); flex: 1; }
+  .dots { display: flex; gap: 10px; margin-bottom: 18px; }
+  .dots span { height: 10px; flex: 1; border-radius: 5px; background: var(--line); }
+  .dots span.done { background: var(--accent); }
+  .recap { list-style: none; padding: 0; margin: 0 0 8px; }
+  .recap li { display: flex; gap: 18px; align-items: center; padding: 18px 0; border-bottom: 2px solid var(--line); font-size: 1.6rem; font-weight: 700; }
+  .recap li small { display: block; font-size: 1.05rem; font-weight: 400; color: var(--soft); }
+  .recap .emo { font-size: 2.2rem; width: 2.8rem; text-align: center; }
+  button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; min-height: 56px; }
+  .back { font: inherit; font-size: 1.1rem; font-weight: 700; color: var(--ink); background: transparent; border: 3px solid var(--ink); border-radius: 12px; padding: 10px 16px; min-height: 56px; cursor: pointer; }
+  .more { text-align: center; color: var(--soft); margin: 18px 0 0; font-size: 1.1rem; }
+  @media (max-width: 480px) {
+    body { font-size: 19px; }
+    main { padding: 14px 14px 32px; }
+    h1 { font-size: 1.9rem; }
+    .help { margin-bottom: 16px; }
+    .options { gap: 10px; }
+    .opt { font-size: 1.3rem; min-height: 72px; padding: 12px 14px; gap: 12px; }
+    .opt .emo { font-size: 1.8rem; width: 2.2rem; }
+    .recap li { font-size: 1.35rem; padding: 14px 0; }
+    .nav { flex-direction: column; }
+    .nav .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+// Mettez votre numéro ici (ex : "0612345678") pour que le SMS vous arrive directement.
+const TELEPHONE = "0661973897";
+
+const STEPS = [
+  { key: "entree", title: "Quelle entrée ?", label: "Entrée", items: [
+    ["🦐","3 bouchées de crevettes"],["🥢","3 nems au porc"],["🥢","3 nems au poulet"],
+    ["🥬","1 rouleau de printemps"],["🥟","3 raviolis japonais"],["🥟","3 raviolis pékinois grillés"],
+    ["🥟","3 bouchées au porc"]]},
+  { key: "plat", title: "Quelle viande ?", label: "Plat", items: [
+    ["🌶️","Bœuf sauté sauce piquante"],["🍗","Poulet croustillant du chef"],
+    ["🍯","Porc caramélisé"],["🍯","Poulet caramélisé"],["🌿","Poulet à la citronnelle"],
+    ["🐄","Bœuf aux oignons"],["🐔","Boulettes de poulet"],["🌶️","Poulet sauce piquante"]]},
+  { key: "acc", title: "Quel accompagnement ?", label: "Accompagnement", items: [
+    ["🍚","Riz cantonais"],["🍚","Riz thaïlandais"],["🍜","Nouilles sautées"],["🍚","Riz nature (blanc)"]]},
+  { key: "boisson", title: "Quelle boisson ?", label: "Boisson", items: [
+    ["🥤","Coca-Cola"],["🥤","Coca-Cola zéro"],["🍊","Fanta orange"],["🫧","San Pellegrino (eau pétillante)"],
+    ["💧","Evian (eau plate)"],["🍑","Ice Tea"],["🍊","Orangina"],["🍋","Schweppes agrumes"],
+    ["🍹","Tropico"],["🍓","Oasis"]]}
+];
+let step = 0;
+const picks = {};
+const app = document.getElementById("app");
+
+function dots(n) {
+  return '<div class="dots">' + STEPS.map((_, i) => `<span class="${i < n ? "done" : ""}"></span>`).join("") + "</div>";
+}
+
+function render() {
+  if (step >= STEPS.length) return renderRecap();
+  const s = STEPS[step];
+  app.innerHTML = dots(step) +
+    `<div class="top"><p class="step">Question ${step + 1} sur ${STEPS.length}</p>` +
+    (step > 0 ? `<button class="back" id="back">← Retour</button>` : "") + `</div>
+     <h1>${s.title}</h1>
+     <p class="help">Appuyez sur votre choix.${s.items.length > 5 ? " Faites glisser vers le haut pour voir tous les choix." : ""}</p>
+     <div class="options">` +
+    s.items.map(([e, t], i) =>
+      `<button class="opt ${picks[s.key] === i ? "on" : ""}" data-i="${i}"><span class="emo">${e}</span>${t}</button>`
+    ).join("") + `</div>` +
+    (s.items.length > 5 ? `<p class="more">C'est la fin de la liste.</p>` : "");
+  app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+    picks[s.key] = +b.dataset.i;
+    b.classList.add("on");
+    setTimeout(() => { step++; render(); window.scrollTo(0, 0); }, 250);
+  });
+  const back = document.getElementById("back");
+  if (back) back.onclick = () => { step--; render(); window.scrollTo(0, 0); };
+}
+
+function renderRecap() {
+  app.innerHTML = dots(STEPS.length) +
+    `<h1>Voici votre menu</h1>
+     <p class="help">C'est bon ? Appuyez sur le bouton rouge pour envoyer vos choix.</p>
+     <ul class="recap">` +
+    STEPS.map(s => { const [e, t] = s.items[picks[s.key]];
+      return `<li><span class="emo">${e}</span><span><small>${s.label}</small>${t}</span></li>`; }).join("") +
+    `</ul>
+     <div class="nav">
+       <a class="btn main" id="send" href="#">Envoyer mes choix par SMS</a>
+       <button class="btn" id="back">← Changer</button>
+       <button class="btn" id="again">Recommencer</button>
+     </div>`;
+  const texte = "Mon menu royal :\n" + STEPS.map(s => s.label + " : " + s.items[picks[s.key]][1]).join("\n");
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  document.getElementById("send").href = "sms:" + TELEPHONE + (ios ? "&" : "?") + "body=" + encodeURIComponent(texte);
+  document.getElementById("back").onclick = () => { step = STEPS.length - 1; render(); };
+  document.getElementById("again").onclick = () => { for (const k in picks) delete picks[k]; step = 0; render(); };
+}
+render();
+</script>
+</body>
+</html>
